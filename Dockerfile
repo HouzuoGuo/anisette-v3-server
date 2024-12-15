@@ -24,11 +24,15 @@ COPY --from=builder /opt/anisette-v3-server /opt/anisette-v3-server
 RUN useradd -ms /bin/bash Alcoholic \
  && mkdir /home/Alcoholic/.config/anisette-v3/lib/ -p \
  && chown -R Alcoholic /home/Alcoholic/ \
- && chmod -R +wx /home/Alcoholic/ \
+ && chmod -R 0755 /home/Alcoholic/ \
  && chown -R Alcoholic /opt/ \
- && chmod -R +wx /opt/
+ && chmod -R 0755 /opt/
 
 # Run the artefact
 USER Alcoholic
 EXPOSE 6969
-ENTRYPOINT [ "/opt/anisette-v3-server" ]
+# 20241215(hz.gl):
+# The entire /home/Alcoholic/.config needs to be persisted across restart because it contains the fake macbook's identity files.
+# Among the files, the server executable creates "adi.db" but fails to set o+r in its file permission.
+# The shell loop mitigates that permission issue.
+CMD ["/bin/bash", "-c", "while true; do sleep 3; chmod -R 0755 /home/Alcoholic; done & /opt/anisette-v3-server"]
